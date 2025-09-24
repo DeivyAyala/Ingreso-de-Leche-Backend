@@ -1,9 +1,9 @@
-const {response} = require('express')
-const {validationResult} = require('express-validator')
+import {response} from 'express'
+import {validationResult} from 'express-validator'
 
 
 
-const crearUsuario = (req, res = response) => {
+export const crearUsuario = (req, res = response) => {
 const {name, lastName, rol, email, password} = req.body;
     //Manejo de errores
     const errors = validationResult( req )
@@ -28,7 +28,7 @@ const {name, lastName, rol, email, password} = req.body;
 }
 
 
-const loginUsuario = (req, res = response) => {
+export const loginUsuario = (req, res = response) => {
     const { email, password} = req.body;
     const errors = validationResult( req )
     console.log(errors)
@@ -49,16 +49,10 @@ const loginUsuario = (req, res = response) => {
 }
 
 
-const revalidarToken = ( req, res = response ) => {
+export const revalidarToken = ( req, res = response ) => {
     res.json({
         ok:true,
         msg: 'Pagina de Recuperar contraseña'
     })
 }
 
-
-module.exports = { 
-    crearUsuario,
-    loginUsuario,
-    revalidarToken
-}

@@ -1,5 +1,9 @@
-const express = require('express')
-require('dotenv').config()
+import express from 'express';
+import dotenv from 'dotenv';
+
+import authRoutes from './routes/auth.js'
+
+dotenv.config()
 
 //Crear el servidor express
 const app = express();
@@ -11,7 +15,7 @@ app.use(express.static('public'));
 app.use( express.json() );
 
 //TODO auth:  Crear, Login, renew
-app.use('/api/auth', require('./routes/auth'));
+app.use('/api/auth', authRoutes);
 
 
 

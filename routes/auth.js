@@ -2,9 +2,11 @@
 //* Rutas de Ususarios / Auth
 //* Host /api/auth
 
-const {Router} = require('express');
-const { crearUsuario, loginUsuario, revalidarToken } = require('../controllers/auth');
-const { check } = require('express-validator');
+import { Router } from 'express';
+import { check } from 'express-validator';
+
+import {crearUsuario, loginUsuario, revalidarToken}  from '../controllers/auth.js'
+
 const router = Router();
 
 
@@ -28,6 +30,7 @@ router.post(
         check('password', 'La contraseña debe de 6 caracteres').not().isEmpty()
     ], 
     loginUsuario)
+
 router.get('/renew', revalidarToken)
 
-module.exports = router;
+export default router;
