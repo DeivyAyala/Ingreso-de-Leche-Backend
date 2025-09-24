@@ -27,7 +27,7 @@ router.post(
     [
         //middelware
         check('email', 'El email es obligatorio').isEmail(),
-        check('password', 'La contraseña debe de 6 caracteres').not().isEmpty()
+        check('password', 'Ingrese la Contraseña').not().isEmpty()
     ], 
     loginUsuario)
 
