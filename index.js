@@ -5,6 +5,8 @@ import authRoutes from './routes/auth.js'
 import { dbConection } from './database/config.js';
 import  cors  from 'cors'
 
+import eventsRoute from './routes/events.js'
+
 dotenv.config()
 
 //Crear el servidor express
@@ -25,12 +27,8 @@ app.use( express.json() );
 //TODO auth:  Crear, Login, renew
 app.use('/api/auth', authRoutes);
 
-
-
-
-
 //TODO CRUD: Eventos 
-
+app.use('/api/events', eventsRoute);
 
 
 

@@ -2,7 +2,7 @@ import {response} from 'express'
 import bcrypt from 'bcryptjs';
 import Usuario from '../models/Usuario.js'
 import { generarJWT } from '../helpers/jwt.js';
-import { validarjwt } from '../middlewares/validarjwt.js';
+
 
 export const crearUsuario = async(req, res = response) => {
    try {
