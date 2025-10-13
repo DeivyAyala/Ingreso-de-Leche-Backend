@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 
 import authRoutes from './routes/auth.js'
 import { dbConection } from './database/config.js';
+import  cors  from 'cors'
 
 dotenv.config()
 
@@ -12,6 +13,9 @@ const app = express();
 //Base de Datos 
 dbConection()
 
+//CORS
+app.use(cors())
+
 //Directorio Publico  
 app.use(express.static('public'));
 
@@ -20,6 +24,7 @@ app.use( express.json() );
 
 //TODO auth:  Crear, Login, renew
 app.use('/api/auth', authRoutes);
+
 
 
 

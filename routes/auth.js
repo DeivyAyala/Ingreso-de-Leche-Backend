@@ -7,6 +7,7 @@ import { check } from 'express-validator';
 
 import {crearUsuario, loginUsuario, revalidarToken}  from '../controllers/auth.js'
 import { validarCampos } from '../middlewares/validarCampos.js';
+import { validarjwt } from '../middlewares/validarjwt.js';
 
 const router = Router();
 
@@ -17,7 +18,7 @@ router.post(
     [ //middelware
         check('name', 'El nombre es obligatorio').not().isEmpty(),
         check('lastName', 'El apellido es obligatorio').not().isEmpty(),
-        check('email', 'El email es obligatorio').isEmail(),
+        check('email', 'No es un correo').isEmail(),
         check('rol', 'El rol es obligatorio').not().isEmpty(),
         check('password', 'La contraseña debe de 6 caracteres').isLength({min: 6})
     ], 
@@ -34,6 +35,6 @@ router.post(
     validarCampos,
     loginUsuario)
 
-router.get('/renew', revalidarToken)
+router.get('/renew', validarjwt , revalidarToken)
 
 export default router;

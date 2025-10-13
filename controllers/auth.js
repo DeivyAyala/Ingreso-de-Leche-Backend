@@ -1,6 +1,8 @@
 import {response} from 'express'
 import bcrypt from 'bcryptjs';
 import Usuario from '../models/Usuario.js'
+import { generarJWT } from '../helpers/jwt.js';
+import { validarjwt } from '../middlewares/validarjwt.js';
 
 export const crearUsuario = async(req, res = response) => {
    try {
@@ -24,12 +26,17 @@ export const crearUsuario = async(req, res = response) => {
 
     await usuario.save();
 
+    // Generar Nuestro JWT  
+    const token = await generarJWT(usuario.id, usuario.name)
+
     res.status(201).json({
       ok: true,
       msg: "Usuario registrado correctamente",
       uid: usuario.id,
-      name: usuario.name
+      name: usuario.name,
+      token
     });
+
   } catch (error) {
     console.error("❌ Error al crear usuario:", error);
     res.status(500).json({
@@ -64,10 +71,13 @@ export const loginUsuario = async(req, res = response) => {
         }
         
        // Generar Nuestro JWT
+        const token = await generarJWT(usuario.id, usuario.name)
+
         res.json({
             ok:true,
             uid: usuario.id,
-            name: usuario.name
+            name: usuario.name,
+            token
         })
 
 
@@ -83,10 +93,19 @@ export const loginUsuario = async(req, res = response) => {
 }
 
 
-export const revalidarToken = ( req, res = response ) => {
-    res.json({
-        ok:true,
-        msg: 'Pagina de Recuperar contraseña'
-    })
+export const revalidarToken = async( req, res = response ) => {
+
+  const uid = req.uid
+  const name = req.name
+
+  // Generar Nuestro JWT  
+    const token = await generarJWT( uid, name )
+
+  
+  res.json({
+      ok:true,
+      token,
+      msg: 'Pagina de Revalidar token'
+  })
 }
 
