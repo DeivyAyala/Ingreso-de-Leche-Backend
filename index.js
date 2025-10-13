@@ -5,7 +5,7 @@ import authRoutes from './routes/auth.js'
 import { dbConection } from './database/config.js';
 import  cors  from 'cors'
 
-import eventsRoute from './routes/events.js'
+import ingresoRoute from './routes/ingreso.js'
 
 dotenv.config()
 
@@ -28,7 +28,7 @@ app.use( express.json() );
 app.use('/api/auth', authRoutes);
 
 //TODO CRUD: Eventos 
-app.use('/api/events', eventsRoute);
+app.use('/api/ingreso', ingresoRoute);
 
 
 

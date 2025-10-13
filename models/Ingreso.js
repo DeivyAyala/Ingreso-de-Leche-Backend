@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 const { Schema, model } = mongoose;
 
-const EventoSchema = new Schema(
+const IngresoSchema = new Schema(
   {
     // 🔹 Relación con proveedor (referencia a otro modelo)
     // provider: {
@@ -75,7 +75,7 @@ const EventoSchema = new Schema(
     // 🔹 Responsable y firma
     user: {
       type: Schema.Types.ObjectId,
-      ref: 'Usuarios'
+      ref: 'Usuario'
     },
     firma: {
       type: String,
@@ -94,4 +94,4 @@ const EventoSchema = new Schema(
   }
 );
 
-export default model("Evento", EventoSchema);
+export default model("Ingreso", IngresoSchema);

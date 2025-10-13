@@ -4,7 +4,7 @@
 //* Host /api/events
 
 import { Router } from 'express';
-import { crearEvento, editarEvento, eliminarEvento, getEventos } from '../controllers/events.js';
+import { crearIngreso, editarIngreso, eliminarIngreso, getIngresos } from '../controllers/ingreso.js';
 import { validarjwt } from '../middlewares/validarjwt.js';
 
 
@@ -15,17 +15,17 @@ const router = Router();
 router.use( validarjwt )
 
 //Obtener eventos
-router.get( '/', validarjwt , getEventos );
+router.get( '/', validarjwt , getIngresos );
 
 //Crear Un nuevo Evento 
-router.post( '/', validarjwt ,crearEvento );
+router.post( '/', validarjwt ,crearIngreso );
 
 
 //Editar  Evento 
-router.put( '/:id', validarjwt ,editarEvento );
+router.put( '/:id', validarjwt ,editarIngreso );
 
 //Eliminar Evento
-router.delete('/:id', validarjwt ,eliminarEvento);
+router.delete('/:id', validarjwt ,eliminarIngreso);
 
 
 export default router;
