@@ -6,6 +6,7 @@ import { dbConection } from './database/config.js';
 import  cors  from 'cors'
 
 import ingresoRoute from './routes/ingreso.js'
+import proveedorRoute from './routes/proveedor.js'
 
 dotenv.config()
 
@@ -27,9 +28,11 @@ app.use( express.json() );
 //TODO auth:  Crear, Login, renew
 app.use('/api/auth', authRoutes);
 
-//TODO CRUD: Eventos 
+//TODO CRUD: Ingresos 
 app.use('/api/ingreso', ingresoRoute);
 
+//TODO CRUD: Proveedores 
+app.use('/api/proveedor', proveedorRoute )
 
 
 //Escuchar Peticiones 

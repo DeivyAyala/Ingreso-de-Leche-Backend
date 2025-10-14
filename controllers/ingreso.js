@@ -1,14 +1,22 @@
 
 import Ingreso  from '../models/Ingreso.js'
 
-export const getIngresos = async( res = response ) => {
-  const ingresos = await Ingreso.find()
-                                .populate('user', 'name') //Traer el name y id del user
-  res.json({
-    ok:true,
-    ingresos
-  })
-}
+export const getIngresos = async (req, res) => {
+  try {
+    const ingresos = await Ingreso.find().populate('user', 'name'); // Trae el nombre del usuario
+    return res.json({
+      ok: true,
+      ingresos,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      ok: false,
+      msg: 'Error al obtener los ingresos',
+    });
+  }
+};
+
 
 
 export const crearIngreso = async( req, res = response ) => {
