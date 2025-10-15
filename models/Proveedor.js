@@ -4,53 +4,50 @@ const { Schema, model } = mongoose;
 
 const ProveedorSchema = new Schema(
   {
-    nombre: {
+    name: {
       type: String,
       required: true,
       trim: true,
-      unique: true, // evita duplicados de nombres de finca
+      unique: true, 
     },
-
     nit: {
       type: String,
       trim: true,
       default: "", // opcional
     },
-
-    direccion: {
+    address: {
       type: String,
       trim: true,
       default: "",
     },
-
-    telefono: {
+    phone: {
       type: String,
       trim: true,
       default: "",
     },
-
     email: {
       type: String,
       trim: true,
       lowercase: true,
       default: "",
     },
-
-    // Persona de contacto o encargado
-    encargado: {
+    inCharge: {
       type: String,
       trim: true,
       default: "",
     },
-
-    // Estado del proveedor (activo / inactivo)
-    activo: {
+    active: {
       type: Boolean,
       default: true,
     },
+    user: {
+      type: Schema.Types.ObjectId,
+      ref: 'Usuario'
+    },
+
   },
   {
-    timestamps: true, // crea createdAt y updatedAt automáticamente
+    timestamps: true, 
     versionKey: false,
   }
 );

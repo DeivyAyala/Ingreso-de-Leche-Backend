@@ -20,8 +20,6 @@ export const getIngresos = async (req, res) => {
 
 
 export const crearIngreso = async( req, res = response ) => {
-
-  //Instancia del modelo evento 
   const ingreso = new Ingreso(req.body) 
   try {
     //Id del User
@@ -41,11 +39,6 @@ export const crearIngreso = async( req, res = response ) => {
       msg: "Datos no Creados"
     })
   }
-
-  res.json({
-    ok:true,
-    msg: 'CrearEventos'
-  })
 }
 
 export const editarIngreso = async( req, res = response ) => {
@@ -79,11 +72,7 @@ export const editarIngreso = async( req, res = response ) => {
       msg: 'No se pudo actualizar'
     })
   }
-
-  res.json({
-    ok:true,
-    ingresoId
-  })
+  
 }
 
 export const eliminarIngreso = async (req, res = response) => {

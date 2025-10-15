@@ -6,6 +6,8 @@ import { Router } from "express";
 
 import { CrearProveedor, editarProveedor, eliminarProveedor, getProveedores } from "../controllers/proveedor.js";
 import { validarjwt } from "../middlewares/validarjwt.js";
+import { check } from "express-validator";
+import { validarCampos } from "../middlewares/validarCampos.js";
 
 
 const router = Router();
@@ -13,15 +15,33 @@ const router = Router();
 //Todas las peticiones deben pasar por la validación de token 
 router.use( validarjwt )
 
-
 router.get('/', getProveedores)
 
-router.post('/', CrearProveedor)
+router.post(
+    '/',
+    [//Midelwares
+        check('name', 'El nombre del proveedor es obligatorio').not().isEmpty(),
+        check('email', 'No es un correo').isEmail(),
+        check('active', 'El estado del proveedor es obligatorio').exists().isBoolean().toBoolean(),
+    ],
+    validarCampos
+    ,CrearProveedor)
 
-router.put('/:id', editarProveedor)
+router.put(
+    '/:id', 
+    [//Midelwares
+        check('id', 'No es un ID válido').isMongoId(),
+        check('email', 'No es un correo').isEmail(),
+       check('active', 'El estado del proveedor es obligatorio').exists().isBoolean().toBoolean(),
+    ],
+    validarCampos,
+    editarProveedor)
 
-router.delete('/:id', eliminarProveedor)
-
+router.delete(
+    '/:id',
+    check('id', 'No es un ID válido').isMongoId(),
+    validarCampos,
+    eliminarProveedor)
 
 
 export default router;
