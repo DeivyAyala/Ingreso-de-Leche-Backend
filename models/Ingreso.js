@@ -5,21 +5,17 @@ const { Schema, model } = mongoose;
 const IngresoSchema = new Schema(
   {
     // 🔹 Relación con proveedor (referencia a otro modelo)
-    // provider: {
-    //   type: Schema.Types.ObjectId,
-    //   ref: "Proveedor", // nombre del modelo de proveedores
-    //   required: true,
-    // },
-
-    // 🔹 Número de remisión
+    provider: {
+      type: Schema.Types.ObjectId,
+      ref: "Proveedor", // nombre del modelo de proveedores
+      required: true,
+    },
     remission: {
       type: String,
       required: true,
       trim: true,
       unique: true,
     },
-
-    // 🔹 Volúmenes
     volume: {
       type: Number, // volumen de remisión (L)
       required: true,
@@ -30,8 +26,6 @@ const IngresoSchema = new Schema(
       required: true,
       min: 0,
     },
-
-    // 🔹 Precio
     price: {
       type: Number, // precio por litro
       required: true,

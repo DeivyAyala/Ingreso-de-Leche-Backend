@@ -3,7 +3,9 @@ import Ingreso  from '../models/Ingreso.js'
 
 export const getIngresos = async (req, res) => {
   try {
-    const ingresos = await Ingreso.find().populate('user', 'name'); // Trae el nombre del usuario
+    const ingresos = await Ingreso.find()
+                                  .populate('provider', 'name phone email') 
+                                  .populate('user', 'name')// Trae el nombre del ususario
     return res.json({
       ok: true,
       ingresos,
