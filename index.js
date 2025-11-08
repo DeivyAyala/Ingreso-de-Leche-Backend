@@ -7,6 +7,8 @@ import  cors  from 'cors'
 
 import ingresoRoute from './routes/ingreso.js'
 import proveedorRoute from './routes/proveedor.js'
+import tanqueRoute from "./routes/tanque.js"
+import personalRoute from "./routes/personal.js"
 
 dotenv.config()
 
@@ -33,6 +35,12 @@ app.use('/api/ingreso', ingresoRoute);
 
 //TODO CRUD: Proveedores 
 app.use('/api/proveedor', proveedorRoute )
+
+//TODO CRUD: Tanques 
+app.use('/api/tanque', tanqueRoute)
+
+app.use('/api/personal', personalRoute)
+
 
 
 //Escuchar Peticiones 

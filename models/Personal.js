@@ -2,12 +2,8 @@ import mongoose from "mongoose";
 
 const {Schema, model} = mongoose
 
-const UsuarioSchema = Schema({
+const PersonalSchema = Schema({
     name: {
-        type: String,
-        required: true
-    },
-     lastName: {
         type: String,
         required: true
     },
@@ -16,17 +12,21 @@ const UsuarioSchema = Schema({
         required: true,
         unique: true
     },
-    password:{
-        type: String,
-        required: true,
-        unique: true
+    phone: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    active: {
+      type: Boolean,
+      default: true, // true = active, false = inactive
     },
     rol: {
         type: String,
-        enum: ["Administrador", "Operador"], 
+        enum: ["Supervisor", "Calidad"], 
         required: true
     }
 
 });
 
-export default model("Usuario", UsuarioSchema);
+export default model("Personal", PersonalSchema);

@@ -15,11 +15,6 @@ const ProveedorSchema = new Schema(
       trim: true,
       default: "", // opcional
     },
-    address: {
-      type: String,
-      trim: true,
-      default: "",
-    },
     phone: {
       type: String,
       trim: true,

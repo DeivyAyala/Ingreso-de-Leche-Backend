@@ -1,11 +1,17 @@
 
-import Ingreso  from '../models/Ingreso.js'
+import Ingreso from "../models/Ingreso.js";
+import Personal from "../models/Personal.js";
+import { response } from "express";
 
 export const getIngresos = async (req, res) => {
   try {
     const ingresos = await Ingreso.find()
                                   .populate('provider', 'name phone email') 
                                   .populate('user', 'name')// Trae el nombre del ususario
+                                  .populate('tank', 'name')
+                                  .populate('supervisor', 'name')
+                                  .populate('analyst', 'name')
+
     return res.json({
       ok: true,
       ingresos,
@@ -21,27 +27,74 @@ export const getIngresos = async (req, res) => {
 
 
 
-export const crearIngreso = async( req, res = response ) => {
-  const ingreso = new Ingreso(req.body) 
+
+
+export const crearIngreso = async (req, res = response) => {
   try {
-    //Id del User
-    ingreso.user = req.uid;
-    
+    const { supervisor, analyst } = req.body;
+
+    // Validar supervisor
+    if (supervisor) {
+      const sup = await Personal.findById(supervisor);
+      if (!sup) {
+        return res.status(400).json({
+          ok: false,
+          msg: "El supervisor especificado no existe",
+        });
+      }
+      if (sup.rol !== "Supervisor") {
+        return res.status(400).json({
+          ok: false,
+          msg: "El personal asignado no tiene el rol 'Supervisor'",
+        });
+      }
+    }
+
+    // Validar analista de calidad
+    if (analyst) {
+      const an = await Personal.findById(analyst);
+      if (!an) {
+        return res.status(400).json({
+          ok: false,
+          msg: "El analista especificado no existe",
+        });
+      }
+      if (an.rol !== "Calidad") {
+        return res.status(400).json({
+          ok: false,
+          msg: "El personal asignado no tiene el rol 'Calidad'",
+        });
+      }
+    }
+
+    // Crear nuevo ingreso
+    const ingreso = new Ingreso({
+      ...req.body,
+      user: req.uid, // Usuario autenticado que registra
+    });
+
     const ingresoGuardado = await ingreso.save();
+
+    // Opcional: populate para devolver información más completa
+    await ingresoGuardado.populate([
+      { path: "provider", select: "name" },
+      { path: "supervisor", select: "name rol" },
+      { path: "analyst", select: "name rol" },
+    ]);
+
     res.status(201).json({
       ok: true,
-      msg: "Evento Creado exitosamente",
-      ingreso: ingresoGuardado
-    })
-      
+      msg: "Ingreso creado exitosamente",
+      ingreso: ingresoGuardado,
+    });
   } catch (err) {
-    console.log(err)
+    console.error(err);
     res.status(500).json({
       ok: false,
-      msg: "Datos no Creados"
-    })
+      msg: "Error al crear el ingreso",
+    });
   }
-}
+};
 
 export const editarIngreso = async( req, res = response ) => {
 

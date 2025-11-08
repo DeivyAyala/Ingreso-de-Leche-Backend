@@ -19,7 +19,6 @@ router.post(
         check('name', 'El nombre es obligatorio').not().isEmpty(),
         check('lastName', 'El apellido es obligatorio').not().isEmpty(),
         check('email', 'No es un correo').isEmail(),
-        check('rol', 'El rol es obligatorio').not().isEmpty(),
         check('password', 'La contraseña debe de 6 caracteres').isLength({min: 6})
     ], 
     validarCampos,

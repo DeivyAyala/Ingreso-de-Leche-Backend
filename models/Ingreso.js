@@ -4,86 +4,77 @@ const { Schema, model } = mongoose;
 
 const IngresoSchema = new Schema(
   {
-    // 🔹 Relación con proveedor (referencia a otro modelo)
-    provider: {
-      type: Schema.Types.ObjectId,
-      ref: "Proveedor", // nombre del modelo de proveedores
+    
+    customDate: {
+      type: Date,
       required: true,
-    },
-    remission: {
-      type: String,
-      required: true,
-      trim: true,
-      unique: true,
-    },
-    volume: {
-      type: Number, // volumen de remisión (L)
-      required: true,
-      min: 0,
-    },
-    realVolume: {
-      type: Number, // volumen real recibido (L)
-      required: true,
-      min: 0,
-    },
-    price: {
-      type: Number, // precio por litro
-      required: true,
-      min: 0,
     },
 
-    // 🔹 Parámetros de calidad
-    fat: {
-      type: Number, // grasa %
+    provider: {
+      type: Schema.Types.ObjectId,
+      ref: "Proveedor",
       required: true,
-      min: 0,
     },
-    protein: {
-      type: Number, // proteína %
-      required: true,
-      min: 0,
-    },
-    temperature: {
-      type: Number, // °C
-      required: true,
-      min: 0,
-    },
-    pH: {
+    volume: {
       type: Number,
       required: true,
       min: 0,
     },
-    density: {
-      type: Number, // g/ml
+    realVolume: {
+      type: Number,
       required: true,
       min: 0,
     },
 
-    // 🔹 Evaluación general
-    quality: {
-      type: String,
-      enum: ["Excelente", "Buena", "Regular", "Deficiente"],
-      required: true,
-    },
-
-    // 🔹 Responsable y firma
+    
     user: {
       type: Schema.Types.ObjectId,
-      ref: 'Usuario'
-    },
-    firma: {
-      type: String,
-      trim: true,
+      ref: "Usuario",
     },
 
-    // 🔹 Notas adicionales
+    
+    tank: {
+      type: Schema.Types.ObjectId,
+      ref: "Tanque",
+    },
+
+    
+    supervisor: {
+      type: Schema.Types.ObjectId,
+      ref: "Personal",
+      validate: {
+        validator: async function (id) {
+          if (!id) return true;
+          const Personal = mongoose.model("Personal");
+          const person = await Personal.findById(id);
+          return person && person.rol === "Supervisor";
+        },
+        message: "El personal asignado como supervisor no tiene el rol 'Supervisor'.",
+      },
+    },
+
+    
+    analyst: {
+      type: Schema.Types.ObjectId,
+      ref: "Personal",
+      validate: {
+        validator: async function (id) {
+          if (!id) return true;
+          const Personal = mongoose.model("Personal");
+          const person = await Personal.findById(id);
+          return person && person.rol === "Calidad";
+        },
+        message: "El personal asignado como analista no tiene el rol 'Calidad'.",
+      },
+    },
+
     notes: {
       type: [String],
       default: [],
     },
   },
   {
-    timestamps: true, // crea automáticamente createdAt y updatedAt
+    timestamps: true,
     versionKey: false,
   }
 );
