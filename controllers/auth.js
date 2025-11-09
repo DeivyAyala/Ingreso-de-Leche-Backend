@@ -4,11 +4,11 @@ import Usuario from '../models/Usuario.js'
 import { generarJWT } from '../helpers/jwt.js';
 
 
-export const crearUsuario = async(req, res = response) => {
-   try {
-    const { name, lastName, rol, email, password } = req.body;
+export const crearUsuario = async (req, res = response) => {
+  try {
+    const { name, lastName, email, password } = req.body;
 
-    // 🔎 Verificar si ya existe el correo
+    //Verificar si ya existe el correo
     let usuario = await Usuario.findOne({ email });
     if (usuario) {
       return res.status(400).json({
@@ -17,37 +17,44 @@ export const crearUsuario = async(req, res = response) => {
       });
     }
 
+    // Asignar rol por defecto (Operador)
+    const rol = "Operador";
+
     // Crear usuario
-    usuario = new Usuario({ name, lastName, rol, email, password });
+    usuario = new Usuario({ name, lastName, email, password, rol });
 
-    //Encriptar Contraseña
+    // Encriptar contraseña
     const salt = bcrypt.genSaltSync();
-    usuario.password = bcrypt.hashSync(password, salt)
+    usuario.password = bcrypt.hashSync(password, salt);
 
+    // Guardar usuario
     await usuario.save();
 
-    // Generar Nuestro JWT  
-    const token = await generarJWT(usuario.id, usuario.name)
-    res.status(201).json({
+    // Generar JWT
+    const token = await generarJWT(usuario.id, usuario.name);
+
+    // Respuesta con el usuario creado y su rol
+    return res.status(201).json({
       ok: true,
       user: {
         uid: usuario.id,
         name: usuario.name,
         lastName: usuario.lastName,
         email: usuario.email,
-        rol: usuario.rol
+        rol: usuario.rol, // ← Esto devuelve "Operador"
       },
       token
     });
 
   } catch (error) {
     console.error("❌ Error al crear usuario:", error);
-    res.status(500).json({
+    return res.status(500).json({
       ok: false,
       msg: "Error en el servidor"
     });
   }
-}
+};
+
 
 
 export const loginUsuario = async (req, res = response) => {
@@ -99,19 +106,43 @@ export const loginUsuario = async (req, res = response) => {
 
 
 
-export const revalidarToken = async( req, res = response ) => {
+export const revalidarToken = async (req, res = response) => {
+  try {
+    const uid = req.uid;
+    const name = req.name;
 
-  const uid = req.uid
-  const name = req.name
+    //Buscar al usuario en la base de datos (sin mostrar la contraseña)
+    const usuario = await Usuario.findById(uid).select('-password');
 
-  // Generar Nuestro JWT  
-    const token = await generarJWT( uid, name )
+    if (!usuario) {
+      return res.status(404).json({
+        ok: false,
+        msg: "Usuario no encontrado",
+      });
+    }
 
-  
-  res.json({
-      ok:true,
+    //Generar nuevo token
+    const token = await generarJWT(uid, name);
+
+    // Respuesta con datos del usuario y nuevo token
+    res.json({
+      ok: true,
+      user: {
+        uid: usuario.id,
+        name: usuario.name,
+        lastName: usuario.lastName,
+        email: usuario.email,
+        rol: usuario.rol,
+      },
       token,
-      msg: 'Pagina de Revalidar token'
-  })
-}
+    });
+  } catch (error) {
+    console.error("❌ Error en revalidarToken:", error);
+    res.status(500).json({
+      ok: false,
+      msg: "Error en el servidor",
+    });
+  }
+};
+
 
