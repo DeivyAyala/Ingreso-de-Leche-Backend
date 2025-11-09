@@ -25,7 +25,7 @@ router.post(
     crearUsuario
 )
 router.post(
-    '/', 
+    '/login', 
     [
         //middelware
         check('email', 'El email es obligatorio').isEmail(),

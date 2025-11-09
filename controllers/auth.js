@@ -28,12 +28,15 @@ export const crearUsuario = async(req, res = response) => {
 
     // Generar Nuestro JWT  
     const token = await generarJWT(usuario.id, usuario.name)
-
     res.status(201).json({
       ok: true,
-      msg: "Usuario registrado correctamente",
-      uid: usuario.id,
-      name: usuario.name,
+      user: {
+        uid: usuario.id,
+        name: usuario.name,
+        lastName: usuario.lastName,
+        email: usuario.email,
+        rol: usuario.rol
+      },
       token
     });
 
@@ -47,50 +50,53 @@ export const crearUsuario = async(req, res = response) => {
 }
 
 
-export const loginUsuario = async(req, res = response) => {
-  
-    try {
-        const { email, password} = req.body;
+export const loginUsuario = async (req, res = response) => {
+  try {
+    const { email, password } = req.body;
 
-        // 🔎 Verificar si ya existe el correo
-        let usuario = await Usuario.findOne({ email });
-        if (!usuario) {
-          return res.status(400).json({
-            ok: false,
-            msg: "El Usuario no Existe con ese Email"
-            });
-        }
-
-        //Validar Password
-       const validPassword = bcrypt.compareSync(password, usuario.password)
-       if(!validPassword){
-           return res.status(400).json({
-                ok: false,
-                msg: 'Contraseña Incorrecta'
-            })
-        }
-        
-       // Generar Nuestro JWT
-        const token = await generarJWT(usuario.id, usuario.name)
-
-        res.json({
-            ok:true,
-            uid: usuario.id,
-            name: usuario.name,
-            token
-        })
-
-
-    } catch (error) {
-            console.error("❌ Error al crear usuario:", error);
-            res.status(500).json({
-            ok: false,
-            msg: "Error en el servidor"
-        });  
+    // 🔎 Verificar si existe el correo
+    let usuario = await Usuario.findOne({ email });
+    if (!usuario) {
+      return res.status(400).json({
+        ok: false,
+        msg: "El usuario no existe con ese email"
+      });
     }
-     
-   
-}
+
+    // 🔐 Validar Password
+    const validPassword = bcrypt.compareSync(password, usuario.password);
+    if (!validPassword) {
+      return res.status(400).json({
+        ok: false,
+        msg: "Contraseña incorrecta"
+      });
+    }
+
+    // 🎫 Generar JWT
+    const token = await generarJWT(usuario.id, usuario.name);
+
+    // 📦 Respuesta estructurada
+    res.json({
+      ok: true,
+      user: {
+        uid: usuario.id,
+        name: usuario.name,
+        lastName: usuario.lastName,
+        email: usuario.email,
+        rol: usuario.rol
+      },
+      token
+    });
+
+  } catch (error) {
+    console.error("❌ Error en loginUsuario:", error);
+    res.status(500).json({
+      ok: false,
+      msg: "Error en el servidor"
+    });
+  }
+};
+
 
 
 export const revalidarToken = async( req, res = response ) => {
