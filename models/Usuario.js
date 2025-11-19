@@ -30,3 +30,4 @@ const UsuarioSchema = Schema({
 });
 
 export default model("Usuario", UsuarioSchema);
+

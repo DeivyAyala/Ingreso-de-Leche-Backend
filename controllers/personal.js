@@ -1,12 +1,16 @@
 import { response } from "express";
 import Personal from "../models/Personal.js";
 
-
-   // OBTENER TODOS LOS REGISTROS
-
 export const getPersonal = async (req, res = response) => {
   try {
-    const personal = await Personal.find().sort({ name: 1 }); // orden alfabético
+    const { rol } = req.query; // ← capturamos el parámetro de consulta
+    let filtro = {};
+
+    if (rol) {
+      filtro.rol = rol;
+    }
+    const personal = await Personal.find(filtro).sort({ name: 1 });
+
     return res.json({
       ok: true,
       personal,

@@ -4,7 +4,7 @@
 //* Host /api/ingreso
 
 import { Router } from 'express';
-import { crearIngreso, editarIngreso, eliminarIngreso, getIngresos } from '../controllers/ingreso.js';
+import { crearIngreso, editarIngreso, eliminarIngreso, getIngresoById, getIngresos } from '../controllers/ingreso.js';
 import { validarjwt } from '../middlewares/validarjwt.js';
 import { validarCampos } from '../middlewares/validarCampos.js';
 import { check } from 'express-validator';
@@ -22,9 +22,14 @@ router.get(
     getIngresos );
 
 //Crear Un nuevo Evento 
+
+
 router.use( validarjwt )
+// Obtener un ingreso por ID
+router.get('/:id', getIngresoById);
+
 router.post( 
-    '/', 
+    '/new', 
     [//Middlewares
         check('volume', 'El volumen de remisión es obligatorio').isFloat({ min: 0 }),
         check('realVolume', 'El volumen real es obligatorio').isFloat({ min: 0 }),

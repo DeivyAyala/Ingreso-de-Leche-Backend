@@ -18,7 +18,15 @@ const router = Router();
 router.use(validarjwt);
 
 // Obtener todo el personal
-router.get("/", getPersonal);
+router.get(
+  "/",
+  [
+    check("rol").optional().isIn(["Supervisor", "Calidad"]),
+    validarCampos,
+  ],
+  getPersonal
+);
+
 
 // Crear nuevo personal
 router.post(

@@ -5,18 +5,18 @@ export const validarjwt = (req, res = response, next) => {
   // Buscar el token en Authorization o en x-token
   let token = null
 
-  // 1️⃣ Primero intenta leer el formato estándar
+  // Primero intenta leer el formato estándar
   const authHeader = req.header('Authorization')
   if (authHeader && authHeader.startsWith('Bearer ')) {
     token = authHeader.split(' ')[1] // extrae solo el token
   }
 
-  // 2️⃣ Si no se envió Authorization, intenta con x-token
+  //Si no se envió Authorization, intenta con x-token
   if (!token) {
     token = req.header('x-token')
   }
 
-  // 3️⃣ Si no hay token en ninguno, retorna error
+  // Si no hay token en ninguno, retorna error
   if (!token) {
     return res.status(401).json({
       ok: false,

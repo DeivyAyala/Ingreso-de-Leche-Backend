@@ -25,8 +25,40 @@ export const getIngresos = async (req, res) => {
   }
 };
 
+export const getIngresoById = async (req, res = response) => {
+  const { id } = req.params;
 
+  try {
+    // Buscar el ingreso por su ID y poblar las relaciones
+    const ingreso = await Ingreso.findById(id)
+      .populate('provider', 'name phone email')
+      .populate('user', 'name')
+      .populate('tank', 'name')
+      .populate('supervisor', 'name rol')
+      .populate('analyst', 'name rol');
 
+    // Si no se encuentra, devolver error 404
+    if (!ingreso) {
+      return res.status(404).json({
+        ok: false,
+        msg: "Ingreso no encontrado con el ID especificado",
+      });
+    }
+
+    // Devolver el ingreso encontrado
+    return res.json({
+      ok: true,
+      ingreso,
+    });
+
+  } catch (error) {
+    console.error("❌ Error al obtener ingreso por ID:", error);
+    return res.status(500).json({
+      ok: false,
+      msg: "Error al obtener el ingreso",
+    });
+  }
+};
 
 
 export const crearIngreso = async (req, res = response) => {
@@ -95,6 +127,9 @@ export const crearIngreso = async (req, res = response) => {
     });
   }
 };
+
+
+
 
 export const editarIngreso = async( req, res = response ) => {
 
