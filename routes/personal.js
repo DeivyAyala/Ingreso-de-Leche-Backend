@@ -11,6 +11,8 @@ import {
 import { validarjwt } from "../middlewares/validarjwt.js";
 import { check } from "express-validator";
 import { validarCampos } from "../middlewares/validarCampos.js";
+import { upload } from "../config/multer.js";
+import { subirImagenPersonal } from "../controllers/personalImagen.js";
 
 const router = Router();
 
@@ -22,6 +24,7 @@ router.get(
   "/",
   [
     check("rol").optional().isIn(["Supervisor", "Calidad"]),
+    check("role").optional().isIn(["Supervisor", "Calidad"]),
     validarCampos,
   ],
   getPersonal
@@ -39,12 +42,23 @@ router.post(
       .optional()
       .isString()
       .isLength({ min: 7 }),
-    check("rol", "El rol es obligatorio y debe ser válido")
+    check("role", "El rol es obligatorio y debe ser válido")
       .isIn(["Supervisor", "Calidad"]),
     validarCampos,
   ],
   crearPersonal
 );
+
+// Subir imagen al personal
+router.post(
+  "/:id/imagen",
+  [
+    validarCampos
+  ],
+  upload.single("imagen"),
+  subirImagenPersonal
+);
+
 
 // Editar personal
 router.put(
@@ -52,7 +66,7 @@ router.put(
   [
     check("id", "No es un ID válido").isMongoId(),
     check("email", "El correo no es válido").optional().isEmail(),
-    check("rol", "El rol debe ser válido")
+    check("role", "El rol debe ser válido")
       .optional()
       .isIn(["Supervisor", "Calidad"]),
     check("active", "El estado debe ser booleano")

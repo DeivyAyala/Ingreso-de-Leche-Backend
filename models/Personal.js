@@ -2,7 +2,8 @@ import mongoose from "mongoose";
 
 const {Schema, model} = mongoose
 
-const PersonalSchema = Schema({
+const PersonalSchema = Schema(
+  {
     name: {
         type: String,
         required: true
@@ -21,12 +22,20 @@ const PersonalSchema = Schema({
       type: Boolean,
       default: true, // true = active, false = inactive
     },
-    rol: {
+    role: {
         type: String,
         enum: ["Supervisor", "Calidad"], 
         required: true
-    }
-
-});
+    },
+    imageUrl: {
+      type: String,
+      default: ""
+    },
+  },
+  {
+    timestamps: true,
+    versionKey: false,
+  }
+);
 
 export default model("Personal", PersonalSchema);

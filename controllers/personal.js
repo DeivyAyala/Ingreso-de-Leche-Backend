@@ -1,28 +1,30 @@
 import { response } from "express";
 import Personal from "../models/Personal.js";
 
-export const getPersonal = async (req, res = response) => {
+export const getPersonal = async (req, res) => {
   try {
-    const { rol } = req.query; // ← capturamos el parámetro de consulta
-    let filtro = {};
+    const { role } = req.query;
 
-    if (rol) {
-      filtro.rol = rol;
-    }
-    const personal = await Personal.find(filtro).sort({ name: 1 });
+    // Si viene rol → filtramos
+    // Si no viene → traemos todo
+    const query = role ? { role } : {};
+
+    const personal = await Personal.find(query);
 
     return res.json({
       ok: true,
       personal,
     });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({
+
+  } catch (error) {
+    console.error("Error en getPersonal:", error);
+    return res.status(500).json({
       ok: false,
-      msg: "Error al obtener el personal",
+      msg: "Error al obtener personal",
     });
   }
 };
+
 
 
    // CREAR NUEVO REGISTRO
