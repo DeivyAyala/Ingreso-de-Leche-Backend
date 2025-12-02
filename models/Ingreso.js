@@ -47,7 +47,7 @@ const IngresoSchema = new Schema(
           if (!id) return true;
           const Personal = mongoose.model("Personal");
           const person = await Personal.findById(id);
-          return person && person.rol === "Supervisor";
+          return person && person.role === "Supervisor";
         },
         message: "El personal asignado como supervisor no tiene el rol 'Supervisor'.",
       },
@@ -62,7 +62,7 @@ const IngresoSchema = new Schema(
           if (!id) return true;
           const Personal = mongoose.model("Personal");
           const person = await Personal.findById(id);
-          return person && person.rol === "Calidad";
+          return person && person.role === "Calidad";
         },
         message: "El personal asignado como analista no tiene el rol 'Calidad'.",
       },

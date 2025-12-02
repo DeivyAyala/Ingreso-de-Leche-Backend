@@ -34,8 +34,8 @@ export const getIngresoById = async (req, res = response) => {
       .populate('provider', 'name phone email')
       .populate('user', 'name')
       .populate('tank', 'name')
-      .populate('supervisor', 'name rol')
-      .populate('analyst', 'name rol');
+      .populate('supervisor', 'name role')
+      .populate('analyst', 'name role');
 
     // Si no se encuentra, devolver error 404
     if (!ingreso) {
@@ -74,7 +74,7 @@ export const crearIngreso = async (req, res = response) => {
           msg: "El supervisor especificado no existe",
         });
       }
-      if (sup.rol !== "Supervisor") {
+      if (sup.role !== "Supervisor") {
         return res.status(400).json({
           ok: false,
           msg: "El personal asignado no tiene el rol 'Supervisor'",
@@ -91,7 +91,7 @@ export const crearIngreso = async (req, res = response) => {
           msg: "El analista especificado no existe",
         });
       }
-      if (an.rol !== "Calidad") {
+      if (an.role !== "Calidad") {
         return res.status(400).json({
           ok: false,
           msg: "El personal asignado no tiene el rol 'Calidad'",
@@ -110,8 +110,8 @@ export const crearIngreso = async (req, res = response) => {
     // Opcional: populate para devolver información más completa
     await ingresoGuardado.populate([
       { path: "provider", select: "name" },
-      { path: "supervisor", select: "name rol" },
-      { path: "analyst", select: "name rol" },
+      { path: "supervisor", select: "name role" },
+      { path: "analyst", select: "name role" },
     ]);
 
     res.status(201).json({
