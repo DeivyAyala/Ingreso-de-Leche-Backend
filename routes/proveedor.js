@@ -8,6 +8,8 @@ import { CrearProveedor, editarProveedor, eliminarProveedor, getProveedores } fr
 import { validarjwt } from "../middlewares/validarjwt.js";
 import { check } from "express-validator";
 import { validarCampos } from "../middlewares/validarCampos.js";
+import { upload } from "../config/multer.js";
+import { subirImagenProveedor } from "../controllers/proveedorImagen.js";
 
 
 const router = Router();
@@ -25,7 +27,18 @@ router.post(
         check('active', 'El estado del proveedor es obligatorio').exists().isBoolean().toBoolean(),
     ],
     validarCampos
-    ,CrearProveedor)
+    ,CrearProveedor
+);
+
+router.post(
+  "/:id/imagen",
+  [
+    check("id", "No es un ID válido").isMongoId(),
+    validarCampos,
+  ],
+  upload.single("imagen"),
+  subirImagenProveedor
+);
 
 router.put(
     '/:id', 

@@ -39,6 +39,10 @@ const ProveedorSchema = new Schema(
       type: Schema.Types.ObjectId,
       ref: 'Usuario'
     },
+    imageUrl: {
+      type: String,
+      default: ""
+    },
 
   },
   {
