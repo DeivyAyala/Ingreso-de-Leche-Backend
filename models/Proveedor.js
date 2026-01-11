@@ -10,6 +10,11 @@ const ProveedorSchema = new Schema(
       trim: true,
       unique: true, 
     },
+    address: {
+      type: String,
+      trim: true,
+      default: "", // opcional
+    },
     nit: {
       type: String,
       trim: true,

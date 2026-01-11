@@ -44,8 +44,8 @@ router.put(
     '/:id', 
     [//Midelwares
         check('id', 'No es un ID válido').isMongoId(),
-        check('email', 'No es un correo').isEmail(),
-       check('active', 'El estado del proveedor es obligatorio').exists().isBoolean().toBoolean(),
+        check('email', 'No es un correo').optional().isEmail(),
+        check('active', 'El estado del proveedor es obligatorio').exists().isBoolean().toBoolean(),
     ],
     validarCampos,
     editarProveedor)
