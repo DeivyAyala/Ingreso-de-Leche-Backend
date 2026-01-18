@@ -16,6 +16,11 @@ const UsuarioSchema = Schema({
         required: true,
         unique: true
     },
+    phone:{
+        type: String,
+        unique: true,
+        sparse: true
+    },
     password:{
         type: String,
         required: true,
@@ -25,7 +30,15 @@ const UsuarioSchema = Schema({
         type: String,
         enum: ["Administrador", "Operador"], 
         required: true
-    }
+    },
+    imageUrl: {
+        type: String,
+        default: ""
+    },
+},
+{
+    timestamps: true,
+    versionKey: false
 
 });
 
