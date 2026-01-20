@@ -1,5 +1,6 @@
 
 import Ingreso from "../models/Ingreso.js";
+import Tanque from "../models/Tanque.js";
 import Personal from "../models/Personal.js";
 import { response } from "express";
 
@@ -63,7 +64,7 @@ export const getIngresoById = async (req, res = response) => {
 
 export const crearIngreso = async (req, res = response) => {
   try {
-    const { supervisor, analyst } = req.body;
+    const { supervisor, analyst, tank, realVolume } = req.body;
 
     // Validar supervisor
     if (supervisor) {
@@ -97,6 +98,30 @@ export const crearIngreso = async (req, res = response) => {
           msg: "El personal asignado no tiene el rol 'Calidad'",
         });
       }
+    }
+
+    // Validar capacidad del tanque y actualizar su capacidad actual
+    if (tank) {
+      const tanqueActual = await Tanque.findById(tank);
+      if (!tanqueActual) {
+        return res.status(400).json({
+          ok: false,
+          msg: "El tanque especificado no existe",
+        });
+      }
+
+      const volumenReal = Number(realVolume) || 0;
+      const nuevaCapacidad = (tanqueActual.currentCapacity || 0) + volumenReal;
+
+      if (nuevaCapacidad > tanqueActual.capacity) {
+        return res.status(400).json({
+          ok: false,
+          msg: "La cantidad ingresada supera la capacidad maxima del tanque",
+        });
+      }
+
+      tanqueActual.currentCapacity = nuevaCapacidad;
+      await tanqueActual.save();
     }
 
     // Crear nuevo ingreso
@@ -200,6 +225,74 @@ export const editarIngreso = async (req, res = response) => {
         }
     }
 
+    // Ajustar la capacidad actual del/los tanque(s) segun cambios en realVolume/tank
+    const oldTankId = ingresoActual.tank
+      ? ingresoActual.tank.toString()
+      : null;
+    const newTankId = req.body.tank ? req.body.tank : oldTankId;
+
+    const oldRealVolume = ingresoActual.realVolume || 0;
+    const newRealVolume =
+      typeof req.body.realVolume !== "undefined"
+        ? Number(req.body.realVolume) || 0
+        : oldRealVolume;
+
+    if (newTankId) {
+      if (oldTankId && oldTankId === newTankId) {
+        const tanque = await Tanque.findById(newTankId);
+        if (!tanque) {
+          return res.status(400).json({
+            ok: false,
+            msg: "El tanque especificado no existe",
+          });
+        }
+
+        const nuevaCapacidad =
+          (tanque.currentCapacity || 0) - oldRealVolume + newRealVolume;
+
+        if (nuevaCapacidad > tanque.capacity || nuevaCapacidad < 0) {
+          return res.status(400).json({
+            ok: false,
+            msg: "La cantidad ingresada supera la capacidad maxima del tanque",
+          });
+        }
+
+        tanque.currentCapacity = nuevaCapacidad;
+        await tanque.save();
+      } else {
+        if (oldTankId) {
+          const oldTanque = await Tanque.findById(oldTankId);
+          if (oldTanque) {
+            const capacidadAjustada =
+              (oldTanque.currentCapacity || 0) - oldRealVolume;
+            oldTanque.currentCapacity = Math.max(0, capacidadAjustada);
+            await oldTanque.save();
+          }
+        }
+
+        const newTanque = await Tanque.findById(newTankId);
+        if (!newTanque) {
+          return res.status(400).json({
+            ok: false,
+            msg: "El tanque especificado no existe",
+          });
+        }
+
+        const nuevaCapacidad =
+          (newTanque.currentCapacity || 0) + newRealVolume;
+
+        if (nuevaCapacidad > newTanque.capacity) {
+          return res.status(400).json({
+            ok: false,
+            msg: "La cantidad ingresada supera la capacidad maxima del tanque",
+          });
+        }
+
+        newTanque.currentCapacity = nuevaCapacidad;
+        await newTanque.save();
+      }
+    }
+
 
 
     const ingresoActualizado = await Ingreso.findByIdAndUpdate(
@@ -228,7 +321,7 @@ export const editarIngreso = async (req, res = response) => {
 export const eliminarIngreso = async (req, res = response) => {
   
   try {
-    const ingreso = await Ingreso.findByIdAndDelete(req.params.id);
+    const ingreso = await Ingreso.findById(req.params.id);
 
     if (!ingreso) {
       return res.status(404).json({
@@ -236,6 +329,18 @@ export const eliminarIngreso = async (req, res = response) => {
         msg: 'Ingreso no encontrado'
       });
     }
+
+    if (ingreso.tank) {
+      const tanque = await Tanque.findById(ingreso.tank);
+      if (tanque) {
+        const volumenReal = Number(ingreso.realVolume) || 0;
+        const capacidadAjustada = (tanque.currentCapacity || 0) - volumenReal;
+        tanque.currentCapacity = Math.max(0, capacidadAjustada);
+        await tanque.save();
+      }
+    }
+
+    await Ingreso.findByIdAndDelete(req.params.id);
 
     res.json({
       ok: true,

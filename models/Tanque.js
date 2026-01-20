@@ -18,6 +18,13 @@ const TanqueSchema = new Schema(
       min: 0,
     },
 
+    // Current liters stored in the tank
+    currentCapacity: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+
     // 🔹 Tank status: active or inactive
     active: {
       type: Boolean,
