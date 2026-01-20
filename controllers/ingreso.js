@@ -6,11 +6,11 @@ import { response } from "express";
 export const getIngresos = async (req, res) => {
   try {
     const ingresos = await Ingreso.find()
-                                  .populate('provider', 'name phone email') 
+                                  .populate('provider', 'name phone email active') 
                                   .populate('user', 'name')// Trae el nombre del ususario
-                                  .populate('tank', 'name')
-                                  .populate('supervisor', 'name')
-                                  .populate('analyst', 'name')
+                                  .populate('tank', 'name active')
+                                  .populate('supervisor', 'name active')
+                                  .populate('analyst', 'name active')
 
     return res.json({
       ok: true,
@@ -131,39 +131,99 @@ export const crearIngreso = async (req, res = response) => {
 
 
 
-export const editarIngreso = async( req, res = response ) => {
-
-  const ingresoId = req.params.id
+export const editarIngreso = async (req, res = response) => {
+  const ingresoId = req.params.id;
 
   try {
-    const ingreso = Ingreso.findById( ingresoId );
-    if( !ingreso ) {
-      res.status(404).json({
+    const ingresoActual = await Ingreso.findById(ingresoId).populate(
+      "provider",
+      "isActive"
+    );
+
+    if (!ingresoActual) {
+      return res.status(404).json({
         ok: false,
-        msg: 'Ingreso no existe por el ID'
-      })
+        msg: "Ingreso no existe",
+      });
     }
 
-    const nuevoIngreso = {
-      ...req.body,
-      user: req.uid
+    // 🔒 Validación de proveedor
+    if (req.body.provider) {
+      const mismoProveedor =
+        ingresoActual.provider &&
+        ingresoActual.provider._id.toString() === req.body.provider;
+
+      if (!mismoProveedor && ingresoActual.provider?.active === false) {
+        return res.status(400).json({
+          ok: false,
+          msg: "No puedes asignar un proveedor inactivo",
+        });
+      }
     }
 
-    const ingresoActualizado = await Ingreso.findByIdAndUpdate( ingresoId, nuevoIngreso, { new: true }  )
+    if(req.body.analyst){
+      const mismoCalidad = 
+        ingresoActual.analyst &&
+        ingresoActual.analyst._id.toString() === req.body.analyst
+
+        if(!mismoCalidad && ingresoActual.analyst.active === false){
+          return res.status(400).json({
+            ok: false,
+            msg: "No puedes asignar un Analista de Calidad Inactivo"
+          })
+        }
+    }
+
+    if(req.body.supervisor){
+      const mismoSupervisor = 
+        ingresoActual.supervisor &&
+        ingresoActual.supervisor._id.toString() === req.body.supervisor
+
+        if(!mismoSupervisor && ingresoActual.supervisor.active === false){
+          return res.status(400).json({
+            ok: false,
+            msg: "No puedes asignar un Supervisor Inactivo"
+          })
+        }
+    }
+
+    if(req.body.tank){
+      const mismoTanque = 
+        ingresoActual.tank &&
+        ingresoActual.tank._id.toString() === req.body.tank
+
+        if(!mismoTanque && ingresoActual.tank.active === false){
+          return res.status(400).json({
+            ok: false,
+            msg: "No puedes asignar un Tanque Inactivo"
+          })
+        }
+    }
+
+
+
+    const ingresoActualizado = await Ingreso.findByIdAndUpdate(
+      ingresoId,
+      {
+        ...req.body,
+        user: req.uid,
+      },
+      { new: true }
+    );
+
     res.json({
       ok: true,
-      ingreso: ingresoActualizado
-    })
-    
-  } catch (err) {
-    console.log(err)
+      ingreso: ingresoActualizado,
+    });
+  } catch (error) {
+    console.error(error);
     res.status(500).json({
       ok: false,
-      msg: 'No se pudo actualizar'
-    })
+      msg: "No se pudo actualizar el ingreso",
+    });
   }
-  
-}
+};
+
 
 export const eliminarIngreso = async (req, res = response) => {
   

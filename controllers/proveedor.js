@@ -3,7 +3,7 @@ import Proveedor from "../models/Proveedor.js"
 
 export const getProveedores = async(req, res) => {
     try {
-        const proveedor = await Proveedor.find().populate( 'user','name' )
+        const proveedor = await Proveedor.find().populate( 'user','name active' )
         return res.json({
           ok: true,
           proveedor,
