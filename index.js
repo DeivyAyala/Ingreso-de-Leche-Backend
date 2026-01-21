@@ -9,6 +9,7 @@ import ingresoRoute from './routes/ingreso.js'
 import proveedorRoute from './routes/proveedor.js'
 import tanqueRoute from "./routes/tanque.js"
 import personalRoute from "./routes/personal.js"
+import movimientoRoute from "./routes/movimiento.js"
 
 dotenv.config()
 
@@ -40,6 +41,8 @@ app.use('/api/proveedor', proveedorRoute )
 app.use('/api/tanque', tanqueRoute)
 
 app.use('/api/personal', personalRoute)
+
+app.use('/api/movimiento', movimientoRoute)
 
 
 
