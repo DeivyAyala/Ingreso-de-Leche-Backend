@@ -12,7 +12,8 @@ import {
     eliminarUsuarioAdmin, 
     getUsuarios, 
     loginUsuario, 
-    revalidarToken
+    revalidarToken,
+    verificarCorreo
 }  from '../controllers/auth.js'
 import { validarCampos } from '../middlewares/validarCampos.js';
 import { validarjwt } from '../middlewares/validarjwt.js';
@@ -90,12 +91,13 @@ router.delete(
   eliminarUsuarioAdmin
 );
 
+router.get('/verify', verificarCorreo);
 
 router.post(
     '/login', 
     [
         //middelware
-        check('email', 'El email es obligatorio').isEmail(),
+        check('email', 'El email Invalido').isEmail().normalizeEmail(),
         check('password', 'La contraseña incorrecta').isLength({min: 6})
     ], 
     validarCampos,
@@ -104,3 +106,4 @@ router.post(
 router.get('/renew', validarjwt , revalidarToken)
 
 export default router;
+

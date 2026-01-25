@@ -19,7 +19,9 @@ const UsuarioSchema = Schema({
     phone:{
         type: String,
         unique: true,
-        sparse: true
+        sparse: true,
+        lowercase: true, 
+        trim: true
     },
     password:{
         type: String,
@@ -34,6 +36,16 @@ const UsuarioSchema = Schema({
     imageUrl: {
         type: String,
         default: ""
+    },
+    isVerified: {
+        type: Boolean,
+        default: false
+    },
+    verifyTokenHash: {
+        type: String
+    },
+    verifyTokenExpires: {
+        type: Date
     },
 },
 {
