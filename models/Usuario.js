@@ -47,6 +47,12 @@ const UsuarioSchema = Schema({
     verifyTokenExpires: {
         type: Date
     },
+    resetPasswordTokenHash: {
+        type: String
+    },
+    resetPasswordExpires: {
+        type: Date
+    },
 },
 {
     timestamps: true,

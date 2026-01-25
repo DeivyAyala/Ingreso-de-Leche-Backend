@@ -13,7 +13,9 @@ import {
     getUsuarios, 
     loginUsuario, 
     revalidarToken,
-    verificarCorreo
+    verificarCorreo,
+    solicitarRecuperacionPassword,
+    restablecerPassword
 }  from '../controllers/auth.js'
 import { validarCampos } from '../middlewares/validarCampos.js';
 import { validarjwt } from '../middlewares/validarjwt.js';
@@ -92,6 +94,25 @@ router.delete(
 );
 
 router.get('/verify', verificarCorreo);
+
+router.post(
+  "/forgot-password",
+  [
+    check("email", "No es un correo").isEmail(),
+  ],
+  validarCampos,
+  solicitarRecuperacionPassword
+);
+
+router.post(
+  "/reset-password",
+  [
+    check("token", "El token es obligatorio").not().isEmpty(),
+    check("password", "La contraseña debe tener al menos 6 caracteres").isLength({ min: 6 }),
+  ],
+  validarCampos,
+  restablecerPassword
+);
 
 router.post(
     '/login', 

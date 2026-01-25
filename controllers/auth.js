@@ -1,30 +1,39 @@
-ï»¿import { response } from 'express'
-import bcrypt from 'bcryptjs';
-import crypto from 'crypto';
-import Usuario from '../models/Usuario.js'
-import { generarJWT } from '../helpers/jwt.js';
-import { sendVerificationEmail } from '../helpers/email.js';
+import { response } from "express";
+import bcrypt from "bcryptjs";
+import crypto from "crypto";
+import Usuario from "../models/Usuario.js";
+import { generarJWT } from "../helpers/jwt.js";
+import {
+  sendVerificationEmail,
+  sendPasswordResetEmail,
+} from "../helpers/email.js";
 
 const createVerifyToken = () => {
-  const rawToken = crypto.randomBytes(32).toString('hex');
-  const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
+  const rawToken = crypto.randomBytes(32).toString("hex");
+  const tokenHash = crypto.createHash("sha256").update(rawToken).digest("hex");
   const expires = new Date(Date.now() + 24 * 60 * 60 * 1000);
   return { rawToken, tokenHash, expires };
 };
 
+const createResetToken = () => {
+  const rawToken = crypto.randomBytes(32).toString("hex");
+  const tokenHash = crypto.createHash("sha256").update(rawToken).digest("hex");
+  const expires = new Date(Date.now() + 15 * 60 * 1000);
+  return { rawToken, tokenHash, expires };
+};
 
 export const getUsuarios = async (req, res) => {
   try {
-    const usuarios = await Usuario.find().select('-password');
+    const usuarios = await Usuario.find().select("-password");
     return res.json({
       ok: true,
       usuarios,
     });
   } catch (err) {
     console.log(err);
-    res.status(500).json({ 
+    res.status(500).json({
       ok: false,
-      msg: 'Error al obtener usuarios' 
+      msg: "Error al obtener usuarios",
     });
   }
 };
@@ -33,22 +42,18 @@ export const crearUsuario = async (req, res = response) => {
   try {
     const { name, lastName, email, password, phone, rol } = req.body;
 
-    //Verificar si ya existe el correo
-    let usuario = await Usuario.findOne({ email });
-    if (usuario) {
+    const usuarioExistente = await Usuario.findOne({ email });
+    if (usuarioExistente) {
       return res.status(400).json({
         ok: false,
-        msg: "El correo ya estÃ¡ registrado"
+        msg: "El correo ya está registrado",
       });
     }
 
-    // Asignar rol por defecto (Operador)
-   const rolFinal = rol ? rol : "Operador";
-
+    const rolFinal = rol ? rol : "Operador";
     const { rawToken, tokenHash, expires } = createVerifyToken();
 
-    // Crear usuario
-    usuario = new Usuario({
+    const usuario = new Usuario({
       name,
       lastName,
       email,
@@ -60,12 +65,11 @@ export const crearUsuario = async (req, res = response) => {
       verifyTokenExpires: expires,
     });
 
-    // Encriptar contraseÃ±a
     const salt = bcrypt.genSaltSync();
     usuario.password = bcrypt.hashSync(password, salt);
 
-    // Guardar usuario
     await usuario.save();
+
     try {
       await sendVerificationEmail({
         email: usuario.email,
@@ -73,119 +77,112 @@ export const crearUsuario = async (req, res = response) => {
         token: rawToken,
       });
     } catch (error) {
-      console.error("? Error enviando correo de verificaciï¿½n:", error);
+      console.error("Error enviando correo de verificación:", error);
     }
 
     return res.status(201).json({
       ok: true,
       msg: "Usuario creado. Revisa tu correo para verificar la cuenta.",
     });
-
   } catch (error) {
-    console.error("âŒ Error al crear usuario:", error);
+    console.error("Error al crear usuario:", error);
     return res.status(500).json({
       ok: false,
-      msg: "Error en el servidor"
+      msg: "Error en el servidor",
     });
   }
 };
 
 export const crearUsuarioAdmin = async (req, res) => {
-
   try {
     const { name, lastName, email, password, phone, rol } = req.body;
 
-  // Verificar email duplicado
-  const existe = await Usuario.findOne({ email });
+    const existe = await Usuario.findOne({ email });
     if (existe) {
       return res.status(400).json({
         ok: false,
-        msg: "El correo ya estÃ¡ registrado",
+        msg: "El correo ya está registrado",
       });
-  }
-  const { rawToken, tokenHash, expires } = createVerifyToken();
+    }
 
-  const usuario = new Usuario({
-    name,
-    lastName,
-    email,
-    password,
-    phone,
-    rol: rol || "Operador",
-    isVerified: false,
-    verifyTokenHash: tokenHash,
-    verifyTokenExpires: expires,
-  });
+    const { rawToken, tokenHash, expires } = createVerifyToken();
 
-  const salt = bcrypt.genSaltSync();
-  usuario.password = bcrypt.hashSync(password, salt);
+    const usuario = new Usuario({
+      name,
+      lastName,
+      email,
+      password,
+      phone,
+      rol: rol || "Operador",
+      isVerified: false,
+      verifyTokenHash: tokenHash,
+      verifyTokenExpires: expires,
+    });
 
-  await usuario.save();
+    const salt = bcrypt.genSaltSync();
+    usuario.password = bcrypt.hashSync(password, salt);
 
-  try {
-    await sendVerificationEmail({
-      email: usuario.email,
-      name: usuario.name,
-      token: rawToken,
+    await usuario.save();
+
+    try {
+      await sendVerificationEmail({
+        email: usuario.email,
+        name: usuario.name,
+        token: rawToken,
+      });
+    } catch (error) {
+      console.error("Error enviando correo de verificación:", error);
+    }
+
+    res.status(201).json({
+      ok: true,
+      msg: "Usuario creado. Se envió correo de verificación.",
     });
   } catch (error) {
-    console.error("? Error enviando correo de verificaciï¿½n:", error);
-  }
-
-  res.status(201).json({
-    ok: true,
-    msg: "Usuario creado. Se enviï¿½ correo de verificaciï¿½n.",
-  });
-  } catch (error) {
-    console.error("âŒ Error crearUsuarioAdmin:", error);
+    console.error("Error crearUsuarioAdmin:", error);
     res.status(500).json({
       ok: false,
       msg: "Error en el servidor",
     });
   }
-  
 };
 
-
-export const editarUsuarioAdmin = async(req, res = response) => {
-  const usuarioId = req.params.id
+export const editarUsuarioAdmin = async (req, res = response) => {
+  const usuarioId = req.params.id;
 
   try {
-    const existe = await Usuario.findById(usuarioId)
+    const existe = await Usuario.findById(usuarioId);
 
-    if(!existe) {
+    if (!existe) {
       return res.status(404).json({
         ok: false,
-        msg: "El Usuario no existe cpor ese ID",
-      })
+        msg: "El usuario no existe por ese ID",
+      });
     }
 
     const datosActualizados = {
-      ...req.body
-    }
+      ...req.body,
+    };
 
     const usuarioActualizado = await Usuario.findByIdAndUpdate(
       usuarioId,
       datosActualizados,
       { new: true }
-    )
+    );
 
     res.json({
       ok: true,
-      msg:"Usuario Actualizado Correctamente",
-      usuario: usuarioActualizado
-    })
-
+      msg: "Usuario actualizado correctamente",
+      usuario: usuarioActualizado,
+    });
   } catch (err) {
-    console.error(err)
+    console.error(err);
     res.status(500).json({
       ok: false,
-      msg: "Error al Actualizar Usuario"
-    })
+      msg: "Error al actualizar usuario",
+    });
   }
-
-}
-
+};
 
 export const eliminarUsuarioAdmin = async (req, res) => {
   const usuarioId = req.params.id;
@@ -200,7 +197,6 @@ export const eliminarUsuarioAdmin = async (req, res) => {
       });
     }
 
-    // ðŸš« Evitar que un admin se elimine a sÃ­ mismo
     if (req.uid === usuarioId) {
       return res.status(400).json({
         ok: false,
@@ -208,16 +204,14 @@ export const eliminarUsuarioAdmin = async (req, res) => {
       });
     }
 
-    // ðŸ—‘ï¸ Eliminar usuario
     await Usuario.findByIdAndDelete(usuarioId);
 
     return res.json({
       ok: true,
       msg: "Usuario eliminado correctamente",
     });
-
   } catch (error) {
-    console.error("âŒ Error eliminarUsuarioAdmin:", error);
+    console.error("Error eliminarUsuarioAdmin:", error);
     return res.status(500).json({
       ok: false,
       msg: "Error en el servidor",
@@ -229,12 +223,11 @@ export const loginUsuario = async (req, res = response) => {
   try {
     const { email, password } = req.body;
 
-    // ðŸ”Ž Verificar si existe el correo
-    let usuario = await Usuario.findOne({ email });
+    const usuario = await Usuario.findOne({ email });
     if (!usuario) {
       return res.status(400).json({
         ok: false,
-        msg: "El usuario no existe con ese email"
+        msg: "El usuario no existe con ese email",
       });
     }
 
@@ -245,19 +238,16 @@ export const loginUsuario = async (req, res = response) => {
       });
     }
 
-    // ðŸ” Validar Password
     const validPassword = bcrypt.compareSync(password, usuario.password);
     if (!validPassword) {
       return res.status(400).json({
         ok: false,
-        msg: "ContraseÃ±a incorrecta"
+        msg: "Contraseña incorrecta",
       });
     }
 
-    // ðŸŽ« Generar JWT
     const token = await generarJWT(usuario.id, usuario.name);
 
-    // ðŸ“¦ Respuesta estructurada
     res.json({
       ok: true,
       user: {
@@ -267,16 +257,15 @@ export const loginUsuario = async (req, res = response) => {
         email: usuario.email,
         phone: usuario.phone,
         rol: usuario.rol,
-        imageUrl: usuario.imageUrl
+        imageUrl: usuario.imageUrl,
       },
-      token
+      token,
     });
-
   } catch (error) {
-    console.error("âŒ Error en loginUsuario:", error);
+    console.error("Error en loginUsuario:", error);
     res.status(500).json({
       ok: false,
-      msg: "Error en el servidor"
+      msg: "Error en el servidor",
     });
   }
 };
@@ -286,8 +275,7 @@ export const revalidarToken = async (req, res = response) => {
     const uid = req.uid;
     const name = req.name;
 
-    //Buscar al usuario en la base de datos (sin mostrar la contraseÃ±a)
-    const usuario = await Usuario.findById(uid).select('-password');
+    const usuario = await Usuario.findById(uid).select("-password");
 
     if (!usuario) {
       return res.status(404).json({
@@ -303,10 +291,8 @@ export const revalidarToken = async (req, res = response) => {
       });
     }
 
-    //Generar nuevo token
     const token = await generarJWT(uid, name);
 
-    // Respuesta con datos del usuario y nuevo token
     res.json({
       ok: true,
       user: {
@@ -316,12 +302,12 @@ export const revalidarToken = async (req, res = response) => {
         phone: usuario.phone,
         email: usuario.email,
         rol: usuario.rol,
-        imageUrl: usuario.imageUrl
+        imageUrl: usuario.imageUrl,
       },
       token,
     });
   } catch (error) {
-    console.error("âŒ Error en revalidarToken:", error);
+    console.error("Error en revalidarToken:", error);
     res.status(500).json({
       ok: false,
       msg: "Error en el servidor",
@@ -340,7 +326,7 @@ export const verificarCorreo = async (req, res = response) => {
       });
     }
 
-    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+    const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
 
     const usuario = await Usuario.findOne({
       verifyTokenHash: tokenHash,
@@ -350,13 +336,13 @@ export const verificarCorreo = async (req, res = response) => {
     if (!usuario) {
       return res.status(400).json({
         ok: false,
-        msg: "Token invï¿½lido o expirado",
+        msg: "Token inválido o expirado",
       });
     }
 
     usuario.isVerified = true;
-    usuario.verifyTokenHash = null;
-    usuario.verifyTokenExpires = null;
+    usuario.verifyTokenHash = undefined;
+    usuario.verifyTokenExpires = undefined;
     await usuario.save();
 
     return res.json({
@@ -364,7 +350,7 @@ export const verificarCorreo = async (req, res = response) => {
       msg: "Correo verificado correctamente",
     });
   } catch (error) {
-    console.error("? Error al verificar correo:", error);
+    console.error("Error al verificar correo:", error);
     return res.status(500).json({
       ok: false,
       msg: "Error en el servidor",
@@ -372,4 +358,88 @@ export const verificarCorreo = async (req, res = response) => {
   }
 };
 
+export const solicitarRecuperacionPassword = async (req, res = response) => {
+  try {
+    const { email } = req.body;
 
+    const usuario = await Usuario.findOne({ email });
+
+    // Respuesta genérica para no filtrar correos válidos
+    const genericResponse = {
+      ok: true,
+      msg: "Si el correo existe, recibirás instrucciones para recuperar tu contraseña.",
+    };
+
+    if (!usuario) {
+      return res.json(genericResponse);
+    }
+
+    const { rawToken, tokenHash, expires } = createResetToken();
+
+    usuario.resetPasswordTokenHash = tokenHash;
+    usuario.resetPasswordExpires = expires;
+    await usuario.save();
+
+    try {
+      await sendPasswordResetEmail({
+        email: usuario.email,
+        name: usuario.name,
+        token: rawToken,
+      });
+    } catch (error) {
+      console.error("Error enviando correo de recuperación:", error);
+    }
+
+    return res.json(genericResponse);
+  } catch (error) {
+    console.error("Error al solicitar recuperación:", error);
+    return res.status(500).json({
+      ok: false,
+      msg: "Error en el servidor",
+    });
+  }
+};
+
+export const restablecerPassword = async (req, res = response) => {
+  try {
+    const { token, password } = req.body;
+
+    if (!token) {
+      return res.status(400).json({
+        ok: false,
+        msg: "Token requerido",
+      });
+    }
+
+    const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+
+    const usuario = await Usuario.findOne({
+      resetPasswordTokenHash: tokenHash,
+      resetPasswordExpires: { $gt: new Date() },
+    });
+
+    if (!usuario) {
+      return res.status(400).json({
+        ok: false,
+        msg: "Token inválido o expirado",
+      });
+    }
+
+    const salt = bcrypt.genSaltSync();
+    usuario.password = bcrypt.hashSync(password, salt);
+    usuario.resetPasswordTokenHash = undefined;
+    usuario.resetPasswordExpires = undefined;
+    await usuario.save();
+
+    return res.json({
+      ok: true,
+      msg: "Contraseña actualizada correctamente",
+    });
+  } catch (error) {
+    console.error("Error al restablecer contraseña:", error);
+    return res.status(500).json({
+      ok: false,
+      msg: "Error en el servidor",
+    });
+  }
+};
