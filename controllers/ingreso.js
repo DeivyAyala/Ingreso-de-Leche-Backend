@@ -1,17 +1,17 @@
-
+import { response } from "express";
 import Ingreso from "../models/Ingreso.js";
 import Tanque from "../models/Tanque.js";
 import Personal from "../models/Personal.js";
-import { response } from "express";
+import { toUtcDate } from "../helpers/timeZone.js";
 
 export const getIngresos = async (req, res) => {
   try {
     const ingresos = await Ingreso.find()
-                                  .populate('provider', 'name phone email active') 
-                                  .populate('user', 'name')// Trae el nombre del ususario
-                                  .populate('tank', 'name active')
-                                  .populate('supervisor', 'name active')
-                                  .populate('analyst', 'name active')
+      .populate("provider", "name phone email active")
+      .populate("user", "name")
+      .populate("tank", "name active")
+      .populate("supervisor", "name active")
+      .populate("analyst", "name active");
 
     return res.json({
       ok: true,
@@ -21,7 +21,7 @@ export const getIngresos = async (req, res) => {
     console.error(error);
     return res.status(500).json({
       ok: false,
-      msg: 'Error al obtener los ingresos',
+      msg: "Error al obtener los ingresos",
     });
   }
 };
@@ -30,15 +30,13 @@ export const getIngresoById = async (req, res = response) => {
   const { id } = req.params;
 
   try {
-    // Buscar el ingreso por su ID y poblar las relaciones
     const ingreso = await Ingreso.findById(id)
-      .populate('provider', 'name phone email')
-      .populate('user', 'name')
-      .populate('tank', 'name')
-      .populate('supervisor', 'name role')
-      .populate('analyst', 'name role');
+      .populate("provider", "name phone email")
+      .populate("user", "name")
+      .populate("tank", "name")
+      .populate("supervisor", "name role")
+      .populate("analyst", "name role");
 
-    // Si no se encuentra, devolver error 404
     if (!ingreso) {
       return res.status(404).json({
         ok: false,
@@ -46,14 +44,12 @@ export const getIngresoById = async (req, res = response) => {
       });
     }
 
-    // Devolver el ingreso encontrado
     return res.json({
       ok: true,
       ingreso,
     });
-
   } catch (error) {
-    console.error("❌ Error al obtener ingreso por ID:", error);
+    console.error("? Error al obtener ingreso por ID:", error);
     return res.status(500).json({
       ok: false,
       msg: "Error al obtener el ingreso",
@@ -61,12 +57,10 @@ export const getIngresoById = async (req, res = response) => {
   }
 };
 
-
 export const crearIngreso = async (req, res = response) => {
   try {
     const { supervisor, analyst, tank, realVolume } = req.body;
 
-    // Validar supervisor
     if (supervisor) {
       const sup = await Personal.findById(supervisor);
       if (!sup) {
@@ -83,7 +77,6 @@ export const crearIngreso = async (req, res = response) => {
       }
     }
 
-    // Validar analista de calidad
     if (analyst) {
       const an = await Personal.findById(analyst);
       if (!an) {
@@ -100,7 +93,6 @@ export const crearIngreso = async (req, res = response) => {
       }
     }
 
-    // Validar capacidad del tanque y actualizar su capacidad actual
     if (tank) {
       const tanqueActual = await Tanque.findById(tank);
       if (!tanqueActual) {
@@ -124,15 +116,14 @@ export const crearIngreso = async (req, res = response) => {
       await tanqueActual.save();
     }
 
-    // Crear nuevo ingreso
     const ingreso = new Ingreso({
       ...req.body,
-      user: req.uid, // Usuario autenticado que registra
+      customDate: toUtcDate(req.body.customDate),
+      user: req.uid,
     });
 
     const ingresoGuardado = await ingreso.save();
 
-    // Opcional: populate para devolver información más completa
     await ingresoGuardado.populate([
       { path: "provider", select: "name" },
       { path: "supervisor", select: "name role" },
@@ -153,9 +144,6 @@ export const crearIngreso = async (req, res = response) => {
   }
 };
 
-
-
-
 export const editarIngreso = async (req, res = response) => {
   const ingresoId = req.params.id;
 
@@ -172,7 +160,6 @@ export const editarIngreso = async (req, res = response) => {
       });
     }
 
-    // 🔒 Validación de proveedor
     if (req.body.provider) {
       const mismoProveedor =
         ingresoActual.provider &&
@@ -186,49 +173,45 @@ export const editarIngreso = async (req, res = response) => {
       }
     }
 
-    if(req.body.analyst){
-      const mismoCalidad = 
+    if (req.body.analyst) {
+      const mismoCalidad =
         ingresoActual.analyst &&
-        ingresoActual.analyst._id.toString() === req.body.analyst
+        ingresoActual.analyst._id.toString() === req.body.analyst;
 
-        if(!mismoCalidad && ingresoActual.analyst.active === false){
-          return res.status(400).json({
-            ok: false,
-            msg: "No puedes asignar un Analista de Calidad Inactivo"
-          })
-        }
+      if (!mismoCalidad && ingresoActual.analyst.active === false) {
+        return res.status(400).json({
+          ok: false,
+          msg: "No puedes asignar un Analista de Calidad Inactivo",
+        });
+      }
     }
 
-    if(req.body.supervisor){
-      const mismoSupervisor = 
+    if (req.body.supervisor) {
+      const mismoSupervisor =
         ingresoActual.supervisor &&
-        ingresoActual.supervisor._id.toString() === req.body.supervisor
+        ingresoActual.supervisor._id.toString() === req.body.supervisor;
 
-        if(!mismoSupervisor && ingresoActual.supervisor.active === false){
-          return res.status(400).json({
-            ok: false,
-            msg: "No puedes asignar un Supervisor Inactivo"
-          })
-        }
+      if (!mismoSupervisor && ingresoActual.supervisor.active === false) {
+        return res.status(400).json({
+          ok: false,
+          msg: "No puedes asignar un Supervisor Inactivo",
+        });
+      }
     }
 
-    if(req.body.tank){
-      const mismoTanque = 
-        ingresoActual.tank &&
-        ingresoActual.tank._id.toString() === req.body.tank
+    if (req.body.tank) {
+      const mismoTanque =
+        ingresoActual.tank && ingresoActual.tank._id.toString() === req.body.tank;
 
-        if(!mismoTanque && ingresoActual.tank.active === false){
-          return res.status(400).json({
-            ok: false,
-            msg: "No puedes asignar un Tanque Inactivo"
-          })
-        }
+      if (!mismoTanque && ingresoActual.tank.active === false) {
+        return res.status(400).json({
+          ok: false,
+          msg: "No puedes asignar un Tanque Inactivo",
+        });
+      }
     }
 
-    // Ajustar la capacidad actual del/los tanque(s) segun cambios en realVolume/tank
-    const oldTankId = ingresoActual.tank
-      ? ingresoActual.tank.toString()
-      : null;
+    const oldTankId = ingresoActual.tank ? ingresoActual.tank.toString() : null;
     const newTankId = req.body.tank ? req.body.tank : oldTankId;
 
     const oldRealVolume = ingresoActual.realVolume || 0;
@@ -278,8 +261,7 @@ export const editarIngreso = async (req, res = response) => {
           });
         }
 
-        const nuevaCapacidad =
-          (newTanque.currentCapacity || 0) + newRealVolume;
+        const nuevaCapacidad = (newTanque.currentCapacity || 0) + newRealVolume;
 
         if (nuevaCapacidad > newTanque.capacity) {
           return res.status(400).json({
@@ -293,12 +275,11 @@ export const editarIngreso = async (req, res = response) => {
       }
     }
 
-
-
     const ingresoActualizado = await Ingreso.findByIdAndUpdate(
       ingresoId,
       {
         ...req.body,
+        customDate: req.body.customDate ? toUtcDate(req.body.customDate) : ingresoActual.customDate,
         user: req.uid,
       },
       { new: true }
@@ -317,16 +298,14 @@ export const editarIngreso = async (req, res = response) => {
   }
 };
 
-
 export const eliminarIngreso = async (req, res = response) => {
-  
   try {
     const ingreso = await Ingreso.findById(req.params.id);
 
     if (!ingreso) {
       return res.status(404).json({
         ok: false,
-        msg: 'Ingreso no encontrado'
+        msg: "Ingreso no encontrado",
       });
     }
 
@@ -344,18 +323,14 @@ export const eliminarIngreso = async (req, res = response) => {
 
     res.json({
       ok: true,
-      msg: 'Ingreso eliminado correctamente',
-      ingreso
+      msg: "Ingreso eliminado correctamente",
+      ingreso,
     });
   } catch (err) {
     console.error(err);
     res.status(500).json({
       ok: false,
-      msg: 'Error al eliminar ingreso'
+      msg: "Error al eliminar ingreso",
     });
   }
 };
-
-
-
-

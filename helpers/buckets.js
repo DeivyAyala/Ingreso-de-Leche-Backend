@@ -51,14 +51,14 @@ export const buildBuckets = (range, from, to) => {
   return { labels, keys };
 };
 
-export const buildGroupExpression = (range, field) => {
+export const buildGroupExpression = (range, field, timeZone = "America/Bogota") => {
   if (range === "day") {
-    return { $hour: `$${field}` };
+    return { $hour: { date: `$${field}`, timezone: timeZone } };
   }
 
   if (range === "year") {
-    return { $dateToString: { format: "%Y-%m", date: `$${field}` } };
+    return { $dateToString: { format: "%Y-%m", date: `$${field}`, timezone: timeZone } };
   }
 
-  return { $dateToString: { format: "%Y-%m-%d", date: `$${field}` } };
+  return { $dateToString: { format: "%Y-%m-%d", date: `$${field}`, timezone: timeZone } };
 };

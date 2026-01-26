@@ -1,6 +1,7 @@
 import { response } from "express";
 import Movimiento from "../models/Movimiento.js";
 import Tanque from "../models/Tanque.js";
+import { toUtcDate } from "../helpers/timeZone.js";
 
 export const getMovimientos = async (req, res = response) => {
   try {
@@ -150,7 +151,7 @@ export const crearMovimiento = async (req, res = response) => {
       destinationTank: type === "TRASLADO" ? destinationTank : undefined,
       client: type === "VENTA" ? client : undefined,
       quantity: cantidad,
-      movementDate,
+      movementDate: movementDate ? toUtcDate(movementDate) : new Date(),
       user: req.uid,
     });
 

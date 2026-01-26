@@ -26,7 +26,7 @@ const getTankStatus = (tank, percent) => {
 export const getDashboard = async (req, res = response) => {
   try {
     const { range, date } = req.query;
-    const dateRange = getDateRange(range, date);
+    const dateRange = getDateRange(range, date, "America/Bogota");
 
     if (!dateRange) {
       return res.status(400).json({
@@ -35,10 +35,10 @@ export const getDashboard = async (req, res = response) => {
       });
     }
 
-    const { from, to } = dateRange;
+    const { from, to, timeZone } = dateRange;
     const { labels, keys } = buildBuckets(range, from, to);
-    const ingresoGroup = buildGroupExpression(range, "customDate");
-    const movimientoGroup = buildGroupExpression(range, "movementDate");
+    const ingresoGroup = buildGroupExpression(range, "customDate", timeZone);
+    const movimientoGroup = buildGroupExpression(range, "movementDate", timeZone);
 
     const [
       ingresoTotalAgg,
@@ -145,6 +145,7 @@ export const getDashboard = async (req, res = response) => {
       range,
       from,
       to,
+      timeZone,
       kpis: {
         receptionLiters,
         outputsLiters,

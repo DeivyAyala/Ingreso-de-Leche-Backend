@@ -13,30 +13,48 @@ const parseISODate = (dateStr) => {
     return null;
   }
 
-  return new Date(Date.UTC(year, month - 1, day));
+  return { year, month, day };
 };
 
-export const getDateRange = (range, dateStr) => {
+const getDatePartsInTimeZone = (date, timeZone) => {
+  const formatter = new Intl.DateTimeFormat("en-CA", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+  const parts = formatter.formatToParts(date);
+  const map = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return {
+    year: Number(map.year),
+    month: Number(map.month),
+    day: Number(map.day),
+  };
+};
+
+export const getDateRange = (range, dateStr, timeZone = "America/Bogota") => {
   const baseDate = parseISODate(dateStr);
   const now = new Date();
-  const from = baseDate
-    ? baseDate
-    : new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  const today = getDatePartsInTimeZone(now, timeZone);
+
+  const base = baseDate || today;
+
+  const from = new Date(Date.UTC(base.year, base.month - 1, base.day, 5, 0, 0));
 
   let to = null;
   if (range === "day") {
-    to = new Date(Date.UTC(from.getUTCFullYear(), from.getUTCMonth(), from.getUTCDate() + 1));
+    to = new Date(Date.UTC(from.getUTCFullYear(), from.getUTCMonth(), from.getUTCDate() + 1, 5, 0, 0));
   } else if (range === "week") {
-    to = new Date(Date.UTC(from.getUTCFullYear(), from.getUTCMonth(), from.getUTCDate() + 7));
+    to = new Date(Date.UTC(from.getUTCFullYear(), from.getUTCMonth(), from.getUTCDate() + 7, 5, 0, 0));
   } else if (range === "month") {
-    to = new Date(Date.UTC(from.getUTCFullYear(), from.getUTCMonth() + 1, from.getUTCDate()));
+    to = new Date(Date.UTC(from.getUTCFullYear(), from.getUTCMonth() + 1, from.getUTCDate(), 5, 0, 0));
   } else if (range === "year") {
-    to = new Date(Date.UTC(from.getUTCFullYear() + 1, from.getUTCMonth(), from.getUTCDate()));
+    to = new Date(Date.UTC(from.getUTCFullYear() + 1, from.getUTCMonth(), from.getUTCDate(), 5, 0, 0));
   }
 
   if (!to || Number.isNaN(from.getTime()) || Number.isNaN(to.getTime())) {
     return null;
   }
 
-  return { from, to };
+  return { from, to, timeZone };
 };
