@@ -39,20 +39,57 @@ export const getDateRange = (range, dateStr, timeZone = "America/Bogota") => {
 
   const base = baseDate || today;
 
-  const from = new Date(Date.UTC(base.year, base.month - 1, base.day, 5, 0, 0));
+  const baseAtMidnightBogotaUtc = new Date(
+    Date.UTC(base.year, base.month - 1, base.day, 5, 0, 0)
+  );
+
+  let from = null;
 
   let to = null;
   if (range === "day") {
-    to = new Date(Date.UTC(from.getUTCFullYear(), from.getUTCMonth(), from.getUTCDate() + 1, 5, 0, 0));
+    from = baseAtMidnightBogotaUtc;
+    to = new Date(
+      Date.UTC(
+        from.getUTCFullYear(),
+        from.getUTCMonth(),
+        from.getUTCDate() + 1,
+        5,
+        0,
+        0
+      )
+    );
   } else if (range === "week") {
-    to = new Date(Date.UTC(from.getUTCFullYear(), from.getUTCMonth(), from.getUTCDate() + 7, 5, 0, 0));
+    const weekday = baseAtMidnightBogotaUtc.getUTCDay(); // 0=Sun, 1=Mon
+    const daysSinceMonday = (weekday + 6) % 7;
+    from = new Date(
+      Date.UTC(
+        baseAtMidnightBogotaUtc.getUTCFullYear(),
+        baseAtMidnightBogotaUtc.getUTCMonth(),
+        baseAtMidnightBogotaUtc.getUTCDate() - daysSinceMonday,
+        5,
+        0,
+        0
+      )
+    );
+    to = new Date(
+      Date.UTC(
+        from.getUTCFullYear(),
+        from.getUTCMonth(),
+        from.getUTCDate() + 7,
+        5,
+        0,
+        0
+      )
+    );
   } else if (range === "month") {
-    to = new Date(Date.UTC(from.getUTCFullYear(), from.getUTCMonth() + 1, from.getUTCDate(), 5, 0, 0));
+    from = new Date(Date.UTC(base.year, base.month - 1, 1, 5, 0, 0));
+    to = new Date(Date.UTC(from.getUTCFullYear(), from.getUTCMonth() + 1, 1, 5, 0, 0));
   } else if (range === "year") {
-    to = new Date(Date.UTC(from.getUTCFullYear() + 1, from.getUTCMonth(), from.getUTCDate(), 5, 0, 0));
+    from = new Date(Date.UTC(base.year, 0, 1, 5, 0, 0));
+    to = new Date(Date.UTC(from.getUTCFullYear() + 1, 0, 1, 5, 0, 0));
   }
 
-  if (!to || Number.isNaN(from.getTime()) || Number.isNaN(to.getTime())) {
+  if (!from || !to || Number.isNaN(from.getTime()) || Number.isNaN(to.getTime())) {
     return null;
   }
 
